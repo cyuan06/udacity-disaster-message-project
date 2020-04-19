@@ -1,3 +1,14 @@
+"""
+Processing Data
+
+Arguments:
+    1. csv file containing messages
+    2. csv file containing categories
+    3. SQLITE database that stores cleaned datasets
+"""
+
+
+
 import sys
 import pandas as pd
 import numpy as np
@@ -5,12 +16,26 @@ from sqlalchemy import create_engine
 
 
 def load_data(messages_filepath, categories_filepath):
+    """
+    This Function loads datasets from file and merges two datasets into one
+
+    Arguments:
+        messages_filepath: path of messages.csv
+        categories_filepath: path of categories.csv
+
+    """
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = pd.merge(messages, categories, how = 'inner', on = 'id')
     return df
 
 def clean_data(df):
+    """
+    Clean Data Function
+
+    Arguments:
+        df: data loaded from load_data function
+    """
     #create dataframe called categories to store 36 seperate category columns
     categories = df['categories'].str.split(";", expand = True)
     # select the first row of the categories dataframe
@@ -37,12 +62,27 @@ def clean_data(df):
     df = df.dropna(axis = 0)
     return df
 def save_data(df, database_filename):
+    """
+    Save Data Function
+
+    Arguments:
+        df: data that loaded by load_function and then cleand by clean_data function
+        database_filename: database file path
+    """
     #save data to database
     engine = create_engine('sqlite:///'+database_filename)
     df.to_sql('DisasterMessage', engine, index=False)
 
 
 def main():
+    """
+    ETL function
+
+    1. Data extraction from csv files
+    2. Data cleaning and processing
+    3. load data to sqlite database
+
+    """
     if len(sys.argv) == 4:
 
         messages_filepath, categories_filepath, database_filepath = sys.argv[1:]

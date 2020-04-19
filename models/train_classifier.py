@@ -1,3 +1,13 @@
+"""
+build up machine learning model
+
+- To run ML pipeline that trains classifier and saves
+ python models/train_classifier.py data/DisasterResponse.db models/classifier.pkl
+
+ Arguments:
+    1. SQLITE database path
+    2. pickle filename to save ML model
+"""
 import sys
 import pandas as pd
 import numpy as np
@@ -27,6 +37,17 @@ nltk.download(['punkt', 'wordnet', 'stopwords','averaged_perceptron_tagger'])
 
 
 def load_data(database_filepath):
+    """
+    Load Data Function
+
+    Arguments:
+        database_filepath: path of SQLITE database db
+
+    Output:
+        X: Feature
+        Y: Label
+        category_names: column names of label
+    """
     engine = create_engine('sqlite:///' + database_filepath)
     df = pd.read_sql("DisasterMessage", con = engine)
     X = df['message']
@@ -45,6 +66,14 @@ def load_data(database_filepath):
     return X, Y, category_names
 
 def tokenize(text):
+    """
+    Tokenize function
+
+    Arguments:
+        text: list of text messages
+    Output:
+        cleaned_tokens: cleaned tokenized text
+    """
     #tokenize into words
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
@@ -64,9 +93,23 @@ def tokenize(text):
 
 
 class NounWordRatio(BaseEstimator, TransformerMixin):
-    """Return the ratio of noun words"""
-
+    """
+    Return the ratio of noun words
+    
+    Arguments:
+        BaseEstimator: sklearn BaseEstimator class
+        TransformerMixin: sklearn TransformerMixin class
+    """
     def noun_ratio(self, text):
+        """
+        Return the noun words ratio of text
+
+        Arguments:
+            text: list of text messages
+
+        Output:
+            for each sample message return the noun words ratio
+        """
         # tokenize by word
         word = nltk.word_tokenize(text)
         pos_tags = nltk.pos_tag(word)
@@ -83,9 +126,15 @@ class NounWordRatio(BaseEstimator, TransformerMixin):
             return 0
 
     def fit(self, x, y=None):
+        """
+        fit function
+        """
         return self
 
     def transform(self, X):
+        """
+        Function to transform data
+        """
         # apply function to all values in X
         X_Cal = pd.Series(X).apply(self.noun_ratio)
 
@@ -95,6 +144,11 @@ class NounWordRatio(BaseEstimator, TransformerMixin):
 
 
 def build_model():
+    """
+    Build ML model
+
+    This function intialize a machine learning pipeling for future training
+    """
     pipeline = Pipeline([
     ('features', FeatureUnion([
             
@@ -111,6 +165,18 @@ def build_model():
     return pipeline
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """
+    Evaluate the performance of ML model
+
+    Arguments:
+        model: ML pipeline model
+        X_test: test datasets
+        Y_test: test labels
+        category_names: a column name list of test labels
+
+    Output:
+        print out classification reports for every feature to evaluate the performance of model
+    """
     #predict test set
     y_pred = model.predict(X_test)
     # make into a dataframe for easier analysis
@@ -123,6 +189,15 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
+    """
+    Save model into pickle file
+
+    Arguments:
+        model: ML pipeline model
+        model_filepath: namepath to save model
+    Output:
+        saved model
+    """
     #save model into file
     filename = model_filepath
     with open(filename, 'wb') as file:
@@ -130,6 +205,15 @@ def save_model(model, model_filepath):
 
 
 def main():
+    """
+    Train Classifier main function
+
+    1. Extract data from SQLITE database
+    2. Train ML model on training dataset
+    3. Validate model performance on test dataset
+    4. Save trained model into pickle file
+    
+    """
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
