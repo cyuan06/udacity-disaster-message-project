@@ -54,6 +54,8 @@ def clean_data(df):
     #drop the original columns
     df = df.drop(columns ='categories')
     df = df.drop(columns = 'original')
+    #replace any 2 with 1 in the related column
+    categories['related'].replace(2,1,inplace = True)
     # concatenate the original dataframe with the new `categories` dataframe
     df = pd.concat([df, categories], axis = 1)
     # drop duplicates

@@ -148,6 +148,8 @@ def build_model():
     Build ML model
 
     This function intialize a machine learning pipeling for future training
+
+    GridSearch search for the best parameters and return model with best parameters
     """
     pipeline = Pipeline([
     ('features', FeatureUnion([
@@ -161,8 +163,19 @@ def build_model():
         ])),    
     ('RandomForest', MultiOutputClassifier(RandomForestClassifier()))
     ])
+
+    parameters = {
+        'RandomForest__estimator__n_estimators': [50, 100, 200],
+        'RandomForest__estimator__min_samples_split': [2, 3],
+        'features__transformer_weights': (
+            {'text_pipeline': 1, 'NounWordRatio': 0.5},
+            {'text_pipeline': 0.5, 'NounWordRatio': 1}
+        )
+    }
+
+    cv = GridSearchCV(pipeline, param_grid= parameters, verbose=10, n_jobs = 1)
     
-    return pipeline
+    return cv
 
 def evaluate_model(model, X_test, Y_test, category_names):
     """
